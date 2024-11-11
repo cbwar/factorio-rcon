@@ -1,0 +1,22 @@
+{
+  "name": "cbwar/factorio-rcon",
+  "autoload": {
+    "psr-4": {
+      "Cbwar\\FactorioRcon\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Raphael Lisch",
+      "email": "cbwar@protonmail.com"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "symfony/console": "^7.1"
+  }
+  ,
+  "require-dev": {
+    "roave/security-advisories": "dev-latest"
+  }
+}
