@@ -5,7 +5,7 @@ namespace Cbwar\FactorioRcon;
 readonly class FactorioClient
 {
 
-    public function __construct(private Client $client)
+    public function __construct(private RCONClientInterface $client)
     {
     }
 

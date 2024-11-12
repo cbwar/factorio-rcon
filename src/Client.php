@@ -2,7 +2,9 @@
 
 namespace Cbwar\FactorioRcon;
 
-class Client
+use RuntimeException;
+
+class Client implements RCONClientInterface
 {
     /**
      * @var false|resource
@@ -79,7 +81,7 @@ class Client
         $this->connect();
 
         if ($this->socket === false) {
-            throw new \RuntimeException('Not connected');
+            throw new RuntimeException('Not connected');
         }
 
         $this->log('Authenticating');
@@ -99,7 +101,7 @@ class Client
         $buffer = fread($this->socket, 1000);
         $response = $packet->response($buffer);
         if ($response['type'] !== Packet::SERVERDATA_AUTH_RESPONSE || $response['id'] === Packet::FAILURE) {
-            throw new \RuntimeException('Authentication failed');
+            throw new RuntimeException('Authentication failed');
         }
 
         $this->log('Authenticated successfully');
@@ -120,7 +122,7 @@ class Client
 
         if (!$this->socket) {
             $this->log('Failed to connect error: ' . $errno . ' ' . $errstr);
-            throw new \RuntimeException('Failed to connect');
+            throw new RuntimeException('Failed to connect');
         }
 
         $this->log('Connected');
