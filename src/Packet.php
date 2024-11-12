@@ -33,7 +33,7 @@ class Packet
 
     public function response($buffer): array
     {
-        $size = unpack('l', substr($buffer, 0, 4))[1];
+        $size = unpack('l', substr($buffer, 0, 4))[1] - 10;
         $id = unpack('l', substr($buffer, 4, 4))[1];
         $type = unpack('l', substr($buffer, 8, 4))[1];
         $payload = substr($buffer, 12, -2);
