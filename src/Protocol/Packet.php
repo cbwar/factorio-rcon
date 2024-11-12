@@ -1,6 +1,6 @@
 <?php
 
-namespace Cbwar\FactorioRcon;
+namespace Cbwar\FactorioRcon\Protocol;
 
 class Packet
 {

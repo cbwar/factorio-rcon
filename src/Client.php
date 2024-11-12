@@ -2,6 +2,7 @@
 
 namespace Cbwar\FactorioRcon;
 
+use Cbwar\FactorioRcon\Protocol\Packet;
 use RuntimeException;
 
 class Client implements RCONClientInterface
