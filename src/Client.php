@@ -2,7 +2,8 @@
 
 namespace Cbwar\FactorioRcon;
 
-use Cbwar\FactorioRcon\Protocol\Packet;
+use Cbwar\FactorioRcon\Protocol\PacketFactory;
+use Cbwar\FactorioRcon\Protocol\Request;
 use RuntimeException;
 
 class Client implements RCONClientInterface
@@ -20,11 +21,11 @@ class Client implements RCONClientInterface
     public function __construct(private readonly string $host,
                                 private readonly string $port,
                                 private readonly string $password,
-                                private readonly string  $timeout = '2')
+                                private readonly string $timeout = '2')
     {
     }
 
-    private function log(string $message)
+    private function log(string $message): void
     {
         echo 'RCON // ' . $message . PHP_EOL;
     }
@@ -42,37 +43,30 @@ class Client implements RCONClientInterface
         $this->authenticate();
 
         $this->log('Sending command: ' . $command);
-        $packet = new Packet();
+        $factory = new PacketFactory();
 
         // Send request
-        $options = [
-            'id' => ++$this->packedId,
-            'type' => Packet::SERVERDATA_EXECCOMMAND,
-            'body' => $command
-        ];
-        $request = $packet->request($options);
+        $request = $factory->createRequest(new Request(++$this->packedId,
+            Protocol\Request::TYPE_COMMAND,
+            $command));
         fwrite($this->socket, $request);
 
         $buffer = "";
-        while(($data = fread($this->socket, 500)) !== false) {
+        while (($data = fread($this->socket, 500)) !== false) {
             $buffer .= $data;
         }
-        $response = $packet->response($buffer);
+        $response = $factory->handleResponse($buffer);
 
         // Send ack
-        $options = [
-            'id' => ++$this->packedId,
-            'type' => Packet::SERVERDATA_EXECCOMMAND,
-            'body' => ''
-        ];
-        $request = $packet->request($options);
+        $request = $factory->createRequest(new Request(++$this->packedId,
+            Protocol\Request::TYPE_COMMAND));
         fwrite($this->socket, $request);
 
-        return $response['payload'];
+        return $response->getPayload();
     }
 
 
-    private function authenticate()
+    private function authenticate(): void
     {
         if ($this->authenticated) {
             $this->log('Already authenticated');
@@ -88,20 +82,16 @@ class Client implements RCONClientInterface
         $this->log('Authenticating');
 
 
-        $packet = new Packet();
-        $options = [
-            'id' => ++$this->packedId,
-            'type' => Packet::SERVERDATA_AUTH,
-            'body' => $this->password
-        ];
-        $request = $packet->request($options);
+        $factory = new PacketFactory();
+        $request = $factory->createRequest(new Request(++$this->packedId,
+            Protocol\Request::TYPE_AUTH, $this->password));
 
         $this->log('Sending authentication request');
         fwrite($this->socket, $request);
 
         $buffer = fread($this->socket, 1000);
-        $response = $packet->response($buffer);
-        if ($response['type'] !== Packet::SERVERDATA_AUTH_RESPONSE || $response['id'] === Packet::FAILURE) {
+        $response = $factory->handleResponse($buffer);
+        if ($response->getType() !== Protocol\Response::TYPE_AUTH || $response->getId() === PacketFactory::FAILURE) {
             throw new RuntimeException('Authentication failed');
         }
 
