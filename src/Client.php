@@ -2,8 +2,8 @@
 
 namespace Cbwar\FactorioRcon;
 
+use Cbwar\FactorioRcon\Protocol\Packet;
 use Cbwar\FactorioRcon\Protocol\PacketFactory;
-use Cbwar\FactorioRcon\Protocol\Request;
 use RuntimeException;
 
 class Client implements RCONClientInterface
@@ -46,8 +46,8 @@ class Client implements RCONClientInterface
         $factory = new PacketFactory();
 
         // Send request
-        $request = $factory->createRequest(new Request(++$this->packedId,
-            Protocol\Request::TYPE_COMMAND,
+        $request = $factory->toBinary(new Packet(++$this->packedId,
+            Protocol\Packet::REQUEST_TYPE_COMMAND,
             $command));
         fwrite($this->socket, $request);
 
@@ -55,11 +55,11 @@ class Client implements RCONClientInterface
         while (($data = fread($this->socket, 500)) !== false) {
             $buffer .= $data;
         }
-        $response = $factory->handleResponse($buffer);
+        $response = $factory->toPacket($buffer);
 
         // Send ack
-        $request = $factory->createRequest(new Request(++$this->packedId,
-            Protocol\Request::TYPE_COMMAND));
+        $request = $factory->toBinary(new Packet(++$this->packedId,
+            Protocol\Packet::REQUEST_TYPE_COMMAND));
         fwrite($this->socket, $request);
 
         return $response->getPayload();
@@ -83,15 +83,15 @@ class Client implements RCONClientInterface
 
 
         $factory = new PacketFactory();
-        $request = $factory->createRequest(new Request(++$this->packedId,
-            Protocol\Request::TYPE_AUTH, $this->password));
+        $request = $factory->toBinary(new Packet(++$this->packedId,
+            Protocol\Packet::REQUEST_TYPE_AUTH, $this->password));
 
         $this->log('Sending authentication request');
         fwrite($this->socket, $request);
 
         $buffer = fread($this->socket, 1000);
-        $response = $factory->handleResponse($buffer);
-        if ($response->getType() !== Protocol\Response::TYPE_AUTH || $response->getId() === PacketFactory::FAILURE) {
+        $response = $factory->toPacket($buffer);
+        if ($response->getType() !== Packet::RESPONSE_TYPE_AUTH || $response->getId() === PacketFactory::FAILURE) {
             throw new RuntimeException('Authentication failed');
         }
 
