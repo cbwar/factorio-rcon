@@ -38,6 +38,15 @@ class Client implements RCONClientInterface
         }
     }
 
+    private function readAllWithoutTimeout(): string
+    {
+        $buffer = fgetc($this->socket);
+        while (stream_get_meta_data($this->socket)['unread_bytes'] > 0) {
+            $buffer .= fgetc($this->socket);
+        }
+        return $buffer;
+    }
+
     public function execute(string $command): string
     {
         $this->authenticate();
@@ -51,10 +60,7 @@ class Client implements RCONClientInterface
             $command));
         fwrite($this->socket, $request);
 
-        $buffer = "";
-        while (($data = fread($this->socket, 500)) !== false) {
-            $buffer .= $data;
-        }
+        $buffer = $this->readAllWithoutTimeout();
         $response = $factory->toPacket($buffer);
 
         // Send ack
@@ -89,7 +95,7 @@ class Client implements RCONClientInterface
         $this->log('Sending authentication request');
         fwrite($this->socket, $request);
 
-        $buffer = fread($this->socket, 1000);
+        $buffer = $this->readAllWithoutTimeout();
         $response = $factory->toPacket($buffer);
         if ($response->getType() !== Packet::RESPONSE_TYPE_AUTH || $response->getId() === PacketFactory::FAILURE) {
             throw new RuntimeException('Authentication failed');
@@ -109,13 +115,13 @@ class Client implements RCONClientInterface
         $this->log('Connecting to ' . $this->host . ':' . $this->port);
         $this->socket = stream_socket_client("tcp://$this->host:$this->port", $errno,
             $errstr);
-        stream_set_timeout($this->socket, $this->timeout);
 
         if (!$this->socket) {
             $this->log('Failed to connect error: ' . $errno . ' ' . $errstr);
             throw new RuntimeException('Failed to connect');
         }
 
+        stream_set_timeout($this->socket, $this->timeout);
         $this->log('Connected');
     }
 }
