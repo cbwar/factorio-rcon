@@ -18,7 +18,7 @@
   ],
   "require": {
     "php": "^8.2",
-    "symfony/console": "^7.1"
+    "symfony/console": "^6.4|^7.1"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
