@@ -4,6 +4,8 @@ namespace Cbwar\FactorioRcon;
 
 use Cbwar\FactorioRcon\Protocol\Packet;
 use Cbwar\FactorioRcon\Protocol\PacketFactory;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use RuntimeException;
 
 class Client implements RCONClientInterface
@@ -18,16 +20,25 @@ class Client implements RCONClientInterface
 
     private int $packedId = 1;
 
-    public function __construct(private readonly string $host,
-                                private readonly string $port,
-                                private readonly string $password,
-                                private readonly string $timeout = '2')
+    public function __construct(private readonly string          $host,
+                                private readonly string          $port,
+                                private readonly string          $password,
+                                private readonly string          $timeout = '2',
+                                private ?LoggerInterface $logger = null)
     {
+    }
+
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
     }
 
     private function log(string $message): void
     {
-        echo 'RCON // ' . $message . PHP_EOL;
+        if ($this->logger === null) {
+            return;
+        }
+        $this->logger->log(LogLevel::DEBUG, 'RCON // ' . $message);
     }
 
     public function __destruct()
