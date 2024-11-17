@@ -11,7 +11,7 @@ readonly class FactorioClient
 
     private function parsePlayerList($payload): array
     {
-        preg_match_all('/\s+([^(\n]+)/m', $payload, $matches);
+        preg_match_all('/\s\s([^(\n]+)/m', $payload, $matches);
         return array_map(static fn($match) => trim($match), $matches[1]);
     }
 
@@ -29,12 +29,12 @@ readonly class FactorioClient
 
     public function getVersion(): string
     {
-        return $this->client->execute('/version');
+        return trim($this->client->execute('/version'));
     }
 
     public function getTime(): string
     {
-        return $this->client->execute('/time');
+        return trim($this->client->execute('/time'));
     }
 
     public function getAdmins(): array
@@ -45,11 +45,11 @@ readonly class FactorioClient
 
     public function getEvolution(): string
     {
-        return $this->client->execute('/evolution');
+        return trim($this->client->execute('/evolution'));
     }
 
     public function getSeed(): string
     {
-        return $this->client->execute('/seed');
+        return trim($this->client->execute('/seed'));
     }
 }

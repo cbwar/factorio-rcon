@@ -30,12 +30,27 @@ class FactorioClientTest extends TestCase
             ->method('execute')
             ->with('/players online')
             ->willReturn(<<<TEXT
-Players (2):
+Players (1):
     player1(online)
+
 TEXT
             );
 
         $this->assertEquals(['player1'], $this->factorioClient->getOnlinePlayers());
+    }
+
+    public function testGetOnlinePlayersWithNoPlayers(): void
+    {
+        $this->client->expects($this->once())
+            ->method('execute')
+            ->with('/players online')
+            ->willReturn(<<<TEXT
+Online players (0):
+
+TEXT
+            );
+
+        $this->assertEquals([], $this->factorioClient->getOnlinePlayers());
     }
 
     public function testGetRegisteredPlayers(): void
